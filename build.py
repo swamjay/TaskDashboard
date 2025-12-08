@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 
 # Configuration
 GIST_URL = "https://gist.githubusercontent.com/swamjay/4e8f901e7ef660c3d912ba7fc8ad4960/raw/tasks.json"
-WEATHER_URL = "https://wttr.in/Ames+Iowa?format=%t+%C"
+WEATHER_URL = "https://wttr.in/Ames+Iowa?u&format=%t+%C"
 TIMEZONE_OFFSET = -6  # Central Standard Time (CST). Change to -5 for CDT (daylight saving)
 
 DAY_START = 6   # 6 AM
