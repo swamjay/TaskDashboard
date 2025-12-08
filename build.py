@@ -1,33 +1,82 @@
 import urllib.request
-import json
+import csv
+import io
 from datetime import datetime, timezone, timedelta
 
 # Configuration
-GIST_URL = "https://gist.githubusercontent.com/swamjay/4e8f901e7ef660c3d912ba7fc8ad4960/raw/tasks.json"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDXhY7bs9dSm-uPqRpbhwTDDP8YNTXWYum_ADZ72nIyLxINxKHFbglZwWkR-1yLmFVBwnny2elFWQ_/pub?output=csv"
 WEATHER_URL = "https://wttr.in/Ames+Iowa?u&format=%t+%C"
 
-# Timezone offsets from UTC (December = Standard Time)
+# Timezone offsets from UTC
 TIMEZONES = {
-    "Central": -6,    # CST (Ames)
-    "Eastern": -5,    # EST (NY/NJ)
-    "Pacific": -8,    # PST (LA)
-    "India": 5.5      # IST (Chennai/Pune)
+    "Central": -6,
+    "Eastern": -5,
+    "Pacific": -8,
+    "India": 5.5
 }
 
-DAY_START = 6   # 6 AM
-DAY_END = 18    # 6 PM
+# Categories to display (in order)
+CATEGORIES = ["vdpam", "vdl", "personal"]
+
+DAY_START = 6
+DAY_END = 18
 TOTAL_SECTIONS = 12
 
 
-def fetch_tasks():
-    """Fetch tasks from GitHub Gist"""
+def fetch_tasks_from_sheet():
+    """Fetch tasks from Google Sheets CSV"""
     try:
-        req = urllib.request.Request(GIST_URL, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=10) as response:
-            return json.loads(response.read().decode())
+        req = urllib.request.Request(SHEET_CSV_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as response:
+            csv_data = response.read().decode('utf-8')
+        
+        # Parse CSV
+        reader = csv.DictReader(io.StringIO(csv_data))
+        
+        # Organize tasks by category
+        tasks = {cat: [] for cat in CATEGORIES}
+        all_rows = list(reader)
+        
+        # First pass: get all main tasks (no parent)
+        main_tasks = {}
+        for row in all_rows:
+            category = row.get('category', '').strip().lower()
+            task_name = row.get('task', '').strip()
+            parent = row.get('parent', '').strip()
+            done_raw = row.get('done', 'FALSE').strip().upper()
+            done = done_raw == 'TRUE'
+            
+            if not task_name:
+                continue
+                
+            if not parent:  # Main task
+                task_obj = {
+                    "task": task_name,
+                    "done": done,
+                    "subtasks": []
+                }
+                main_tasks[task_name] = task_obj
+                if category in tasks:
+                    tasks[category].append(task_obj)
+        
+        # Second pass: attach subtasks to their parents
+        for row in all_rows:
+            task_name = row.get('task', '').strip()
+            parent = row.get('parent', '').strip()
+            done_raw = row.get('done', 'FALSE').strip().upper()
+            done = done_raw == 'TRUE'
+            
+            if parent and parent in main_tasks:
+                main_tasks[parent]["subtasks"].append({
+                    "task": task_name,
+                    "done": done
+                })
+        
+        return tasks
+        
     except Exception as e:
         print(f"Error fetching tasks: {e}")
-        return {"vdpam": [], "vdl": [], "personal": []}
+        return {cat: [] for cat in CATEGORIES}
 
 
 def fetch_weather():
@@ -44,7 +93,6 @@ def fetch_weather():
 def get_time_for_zone(offset_hours):
     """Get current time for a specific timezone offset"""
     utc_now = datetime.now(timezone.utc)
-    # Handle fractional offsets (like India's +5:30)
     hours = int(offset_hours)
     minutes = int((offset_hours - hours) * 60)
     local_time = utc_now + timedelta(hours=hours, minutes=minutes)
@@ -89,7 +137,7 @@ def get_section(hour):
 
 
 def render_tasks(tasks):
-    """Render task list as HTML"""
+    """Render task list as HTML, including subtasks"""
     if not tasks:
         return '<div class="task"><span class="checkbox">☐</span><span class="task-text">No tasks</span></div>'
     
@@ -97,11 +145,23 @@ def render_tasks(tasks):
     for task in tasks:
         checkbox = "☑" if task.get("done", False) else "☐"
         done_class = "done" if task.get("done", False) else ""
-        task_text = task.get("task", "")[:30]  # Truncate long tasks
+        task_text = task.get("task", "")[:28]
+        
         html += f'''<div class="task">
           <span class="checkbox">{checkbox}</span>
           <span class="task-text {done_class}">{task_text}</span>
         </div>\n'''
+        
+        subtasks = task.get("subtasks", [])
+        for subtask in subtasks:
+            sub_checkbox = "☑" if subtask.get("done", False) else "☐"
+            sub_done_class = "done" if subtask.get("done", False) else ""
+            sub_text = subtask.get("task", "")[:24]
+            html += f'''<div class="task subtask">
+              <span class="checkbox">{sub_checkbox}</span>
+              <span class="task-text {sub_done_class}">{sub_text}</span>
+            </div>\n'''
+    
     return html
 
 
@@ -117,9 +177,8 @@ def render_progress_bar(section):
 def build_html():
     """Build the complete HTML page"""
     
-    # Fetch data
-    print("Fetching tasks...")
-    tasks = fetch_tasks()
+    print("Fetching tasks from Google Sheets...")
+    tasks = fetch_tasks_from_sheet()
     
     print("Fetching weather...")
     weather = fetch_weather()
@@ -130,27 +189,24 @@ def build_html():
     pacific_time = get_time_for_zone(TIMEZONES["Pacific"])
     india_time = get_time_for_zone(TIMEZONES["India"])
     
-    # Format times
     date_str = format_date(central_time)
     central_str = format_time_short(central_time)
     eastern_str = format_time_short(eastern_time)
     pacific_str = format_time_short(pacific_time)
     india_str = format_time_short(india_time)
     
-    # Section based on Central time
     section_num, section_text = get_section(central_time.hour)
     
     print(f"Central: {central_str}, Eastern: {eastern_str}, Pacific: {pacific_str}, India: {india_str}")
     print(f"Section: {section_text}")
     print(f"Weather: {weather}")
+    print(f"Tasks loaded: VDPAM={len(tasks['vdpam'])}, VDL={len(tasks['vdl'])}, Personal={len(tasks['personal'])}")
     
-    # Render components
     vdpam_html = render_tasks(tasks.get("vdpam", []))
     vdl_html = render_tasks(tasks.get("vdl", []))
     personal_html = render_tasks(tasks.get("personal", []))
     progress_html = render_progress_bar(section_num)
     
-    # Build final HTML
     html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -273,6 +329,7 @@ def build_html():
       flex: 1;
       padding: 0 8px;
       border-right: 2px solid #000;
+      overflow: hidden;
     }}
 
     .column:last-child {{
@@ -291,13 +348,13 @@ def build_html():
     .task {{
       display: flex;
       align-items: flex-start;
-      gap: 6px;
-      padding: 5px 0;
-      font-size: 13px;
+      gap: 5px;
+      padding: 3px 0;
+      font-size: 12px;
     }}
 
     .checkbox {{
-      font-size: 16px;
+      font-size: 14px;
       line-height: 1;
     }}
 
@@ -308,6 +365,15 @@ def build_html():
     .task-text.done {{
       text-decoration: line-through;
       opacity: 0.6;
+    }}
+
+    .subtask {{
+      padding-left: 15px;
+      font-size: 11px;
+    }}
+
+    .subtask .checkbox {{
+      font-size: 12px;
     }}
 
     .updated {{
@@ -378,7 +444,6 @@ def build_html():
 </body>
 </html>'''
 
-    # Write to file
     with open("index.html", "w") as f:
         f.write(html)
     
