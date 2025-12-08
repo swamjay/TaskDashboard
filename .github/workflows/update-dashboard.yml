@@ -1,10 +1,9 @@
 name: Update Dashboard
 
 on:
-  # Run every hour from 6 AM to 6 PM Central (12:00-00:00 UTC)
+  # Run every 15 minutes, all day
   schedule:
-    - cron: '0 12-23 * * *'  # 6 AM - 11 PM Central (UTC-6)
-    - cron: '0 0 * * *'       # Midnight UTC = 6 PM Central
+    - cron: '*/15 * * * *'
   
   # Also run when you push changes
   push:
