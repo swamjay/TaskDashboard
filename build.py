@@ -350,11 +350,11 @@ def build_html():
       align-items: flex-start;
       gap: 5px;
       padding: 3px 0;
-      font-size: 12px;
+      font-size: 14px;
     }}
 
     .checkbox {{
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1;
     }}
 
@@ -369,11 +369,11 @@ def build_html():
 
     .subtask {{
       padding-left: 15px;
-      font-size: 11px;
+      font-size: 13px;
     }}
 
     .subtask .checkbox {{
-      font-size: 12px;
+      font-size: 14px;
     }}
 
     .updated {{
