@@ -120,6 +120,7 @@
       flex: 1;
       padding: 0 8px;
       border-right: 2px solid #000;
+      overflow: hidden;
     }
 
     .column:last-child {
@@ -138,13 +139,13 @@
     .task {
       display: flex;
       align-items: flex-start;
-      gap: 6px;
-      padding: 5px 0;
-      font-size: 13px;
+      gap: 5px;
+      padding: 3px 0;
+      font-size: 12px;
     }
 
     .checkbox {
-      font-size: 16px;
+      font-size: 14px;
       line-height: 1;
     }
 
@@ -155,6 +156,15 @@
     .task-text.done {
       text-decoration: line-through;
       opacity: 0.6;
+    }
+
+    .subtask {
+      padding-left: 15px;
+      font-size: 11px;
+    }
+
+    .subtask .checkbox {
+      font-size: 12px;
     }
 
     .updated {
@@ -175,19 +185,19 @@
   <div class="timezone-row">
     <div class="tz">
       <div class="tz-label">PACIFIC</div>
-      <div class="tz-time">11:10AM</div>
+      <div class="tz-time">11:14AM</div>
     </div>
     <div class="tz tz-primary">
       <div class="tz-label">CENTRAL</div>
-      <div class="tz-time">1:10PM</div>
+      <div class="tz-time">1:14PM</div>
     </div>
     <div class="tz">
       <div class="tz-label">EASTERN</div>
-      <div class="tz-time">2:10PM</div>
+      <div class="tz-time">2:14PM</div>
     </div>
     <div class="tz">
       <div class="tz-label">INDIA</div>
-      <div class="tz-time">12:40AM</div>
+      <div class="tz-time">12:44AM</div>
     </div>
   </div>
 
@@ -220,14 +230,26 @@
           <span class="checkbox">☐</span>
           <span class="task-text ">Edison's Request</span>
         </div>
+<div class="task subtask">
+              <span class="checkbox">☐</span>
+              <span class="task-text ">Run TMLE</span>
+            </div>
+<div class="task subtask">
+              <span class="checkbox">☐</span>
+              <span class="task-text ">Email Results</span>
+            </div>
 <div class="task">
           <span class="checkbox">☐</span>
           <span class="task-text ">Update EWS</span>
         </div>
-<div class="task">
-          <span class="checkbox">☐</span>
-          <span class="task-text ">Update Premises Status</span>
-        </div>
+<div class="task subtask">
+              <span class="checkbox">☐</span>
+              <span class="task-text ">Add vaccine category</span>
+            </div>
+<div class="task subtask">
+              <span class="checkbox">☐</span>
+              <span class="task-text ">Deploy changes</span>
+            </div>
 
       </div>
     </div>
@@ -238,6 +260,14 @@
           <span class="checkbox">☐</span>
           <span class="task-text ">Check POMP Dashboard</span>
         </div>
+<div class="task subtask">
+              <span class="checkbox">☑</span>
+              <span class="task-text done">Verify dashboard access</span>
+            </div>
+<div class="task subtask">
+              <span class="checkbox">☐</span>
+              <span class="task-text ">Verify AHMES access</span>
+            </div>
 
       </div>
     </div>
@@ -249,14 +279,14 @@
           <span class="task-text ">Buy Prenatal medicine</span>
         </div>
 <div class="task">
-          <span class="checkbox">☑</span>
-          <span class="task-text done">Buy microsd for reTerminal</span>
+          <span class="checkbox">☐</span>
+          <span class="task-text ">Buy microsd for reTerminal</span>
         </div>
 
       </div>
     </div>
   </div>
 
-  <div class="updated">Updated: 1:10PM</div>
+  <div class="updated">Updated: 1:14PM</div>
 </body>
 </html>
