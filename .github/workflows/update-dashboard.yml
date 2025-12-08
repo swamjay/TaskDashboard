@@ -1,0 +1,37 @@
+name: Update Dashboard
+
+on:
+  # Run every hour from 6 AM to 6 PM Central (12:00-00:00 UTC)
+  schedule:
+    - cron: '0 12-23 * * *'  # 6 AM - 11 PM Central (UTC-6)
+    - cron: '0 0 * * *'       # Midnight UTC = 6 PM Central
+  
+  # Also run when you push changes
+  push:
+    branches: [main]
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run build script
+        run: python build.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update dashboard $(date -u +%Y-%m-%dT%H:%M:%SZ)" && git push)
