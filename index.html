@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+  <title>Jay's Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #ffffff;
+      color: #000000;
+      width: 800px;
+      height: 480px;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    /* Header Section */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #000;
+      margin-bottom: 10px;
+    }
+
+    .date-time {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .weather {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Section Progress */
+    .progress-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 2px solid #000;
+      margin-bottom: 10px;
+    }
+
+    .section-label {
+      font-size: 16px;
+      font-weight: bold;
+      min-width: 140px;
+    }
+
+    .progress-bar {
+      display: flex;
+      gap: 4px;
+    }
+
+    .progress-box {
+      width: 28px;
+      height: 18px;
+      border: 2px solid #000;
+    }
+
+    .progress-box.filled {
+      background: #000;
+    }
+
+    .progress-box.empty {
+      background: #fff;
+    }
+
+    .time-labels {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* Task Columns */
+    .columns {
+      display: flex;
+      height: 340px;
+    }
+
+    .column {
+      flex: 1;
+      padding: 0 10px;
+      border-right: 2px solid #000;
+    }
+
+    .column:last-child {
+      border-right: none;
+    }
+
+    .column-header {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #000;
+    }
+
+    .task {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .checkbox {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .task-text {
+      line-height: 1.3;
+    }
+
+    .task-text.done {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    /* Loading/Error States */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+    }
+
+    .error {
+      color: #000;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="date-time" id="datetime">Loading...</div>
+    <div class="weather" id="weather">Loading...</div>
+  </div>
+
+  <div class="progress-section">
+    <span class="time-labels">6AM</span>
+    <span class="section-label" id="section-label">Section - of 12</span>
+    <div class="progress-bar" id="progress-bar"></div>
+    <span class="time-labels">6PM</span>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <div class="column-header">VDPAM</div>
+      <div id="vdpam-tasks" class="task-list">Loading...</div>
+    </div>
+    <div class="column">
+      <div class="column-header">VDL</div>
+      <div id="vdl-tasks" class="task-list">Loading...</div>
+    </div>
+    <div class="column">
+      <div class="column-header">Personal</div>
+      <div id="personal-tasks" class="task-list">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const GIST_URL = 'https://gist.githubusercontent.com/swamjay/4e8f901e7ef660c3d912ba7fc8ad4960/raw/tasks.json';
+    const DAY_START = 6;  // 6 AM
+    const DAY_END = 18;   // 6 PM
+    const TOTAL_SECTIONS = 12;
+
+    // Update date and time
+    function updateDateTime() {
+      const now = new Date();
+      const options = { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      };
+      const dateStr = now.toLocaleDateString('en-US', options);
+      
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      
+      document.getElementById('datetime').textContent = `${dateStr}  ${hours}:${minutes} ${ampm}`;
+    }
+
+    // Calculate and display current section
+    function updateSection() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      let section = 0;
+      let labelText = '';
+      
+      if (currentHour < DAY_START) {
+        section = 0;
+        labelText = 'Before Day';
+      } else if (currentHour >= DAY_END) {
+        section = TOTAL_SECTIONS;
+        labelText = 'Day Complete';
+      } else {
+        section = currentHour - DAY_START + 1;
+        labelText = `Section ${section} of ${TOTAL_SECTIONS}`;
+      }
+      
+      document.getElementById('section-label').textContent = labelText;
+      
+      // Build progress bar
+      const progressBar = document.getElementById('progress-bar');
+      progressBar.innerHTML = '';
+      
+      for (let i = 1; i <= TOTAL_SECTIONS; i++) {
+        const box = document.createElement('div');
+        box.className = `progress-box ${i <= section ? 'filled' : 'empty'}`;
+        progressBar.appendChild(box);
+      }
+    }
+
+    // Fetch weather from wttr.in (no API key needed)
+    async function fetchWeather() {
+      try {
+        const response = await fetch('https://wttr.in/Ames+Iowa?format=%t+%C');
+        const text = await response.text();
+        document.getElementById('weather').textContent = `Ames: ${text.trim()}`;
+      } catch (error) {
+        console.error('Weather error:', error);
+        document.getElementById('weather').textContent = 'Weather: N/A';
+      }
+    }
+
+    // Render tasks for a column
+    function renderTasks(containerId, tasks) {
+      const container = document.getElementById(containerId);
+      
+      if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div class="task">No tasks</div>';
+        return;
+      }
+      
+      container.innerHTML = tasks.map(task => `
+        <div class="task">
+          <span class="checkbox">${task.done ? '☑' : '☐'}</span>
+          <span class="task-text ${task.done ? 'done' : ''}">${task.task}</span>
+        </div>
+      `).join('');
+    }
+
+    // Fetch tasks from Gist
+    async function fetchTasks() {
+      try {
+        // Add cache-busting parameter
+        const response = await fetch(GIST_URL + '?t=' + Date.now());
+        const data = await response.json();
+        
+        renderTasks('vdpam-tasks', data.vdpam);
+        renderTasks('vdl-tasks', data.vdl);
+        renderTasks('personal-tasks', data.personal);
+      } catch (error) {
+        console.error('Tasks error:', error);
+        document.getElementById('vdpam-tasks').innerHTML = '<div class="error">Error loading</div>';
+        document.getElementById('vdl-tasks').innerHTML = '<div class="error">Error loading</div>';
+        document.getElementById('personal-tasks').innerHTML = '<div class="error">Error loading</div>';
+      }
+    }
+
+    // Initialize dashboard
+    async function init() {
+      updateDateTime();
+      updateSection();
+      await fetchWeather();
+      await fetchTasks();
+    }
+
+    // Run on load
+    init();
+  </script>
+</body>
+</html>
