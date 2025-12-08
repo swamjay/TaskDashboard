@@ -5,7 +5,14 @@ from datetime import datetime, timezone, timedelta
 # Configuration
 GIST_URL = "https://gist.githubusercontent.com/swamjay/4e8f901e7ef660c3d912ba7fc8ad4960/raw/tasks.json"
 WEATHER_URL = "https://wttr.in/Ames+Iowa?u&format=%t+%C"
-TIMEZONE_OFFSET = -6  # Central Standard Time (CST). Change to -5 for CDT (daylight saving)
+
+# Timezone offsets from UTC (December = Standard Time)
+TIMEZONES = {
+    "Central": -6,    # CST (Ames)
+    "Eastern": -5,    # EST (NY/NJ)
+    "Pacific": -8,    # PST (LA)
+    "India": 5.5      # IST (Chennai/Pune)
+}
 
 DAY_START = 6   # 6 AM
 DAY_END = 18    # 6 PM
@@ -34,22 +41,18 @@ def fetch_weather():
         return "N/A"
 
 
-def get_current_time():
-    """Get current time in Central Time"""
+def get_time_for_zone(offset_hours):
+    """Get current time for a specific timezone offset"""
     utc_now = datetime.now(timezone.utc)
-    central_time = utc_now + timedelta(hours=TIMEZONE_OFFSET)
-    return central_time
+    # Handle fractional offsets (like India's +5:30)
+    hours = int(offset_hours)
+    minutes = int((offset_hours - hours) * 60)
+    local_time = utc_now + timedelta(hours=hours, minutes=minutes)
+    return local_time
 
 
-def format_datetime(dt):
-    """Format datetime for display"""
-    days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
-    day_name = days[dt.weekday()]
-    month_name = months[dt.month - 1]
-    
+def format_time_short(dt):
+    """Format time as HH:MM AM/PM"""
     hour = dt.hour
     minute = dt.minute
     ampm = 'AM' if hour < 12 else 'PM'
@@ -59,7 +62,19 @@ def format_datetime(dt):
     elif hour > 12:
         hour -= 12
     
-    return f"{day_name}, {month_name} {dt.day}, {dt.year}  {hour}:{minute:02d} {ampm}"
+    return f"{hour}:{minute:02d}{ampm}"
+
+
+def format_date(dt):
+    """Format date for display"""
+    days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    day_name = days[dt.weekday()]
+    month_name = months[dt.month - 1]
+    
+    return f"{day_name}, {month_name} {dt.day}, {dt.year}"
 
 
 def get_section(hour):
@@ -109,12 +124,23 @@ def build_html():
     print("Fetching weather...")
     weather = fetch_weather()
     
-    # Get time info
-    current_time = get_current_time()
-    datetime_str = format_datetime(current_time)
-    section_num, section_text = get_section(current_time.hour)
+    # Get times for all zones
+    central_time = get_time_for_zone(TIMEZONES["Central"])
+    eastern_time = get_time_for_zone(TIMEZONES["Eastern"])
+    pacific_time = get_time_for_zone(TIMEZONES["Pacific"])
+    india_time = get_time_for_zone(TIMEZONES["India"])
     
-    print(f"Current time: {datetime_str}")
+    # Format times
+    date_str = format_date(central_time)
+    central_str = format_time_short(central_time)
+    eastern_str = format_time_short(eastern_time)
+    pacific_str = format_time_short(pacific_time)
+    india_str = format_time_short(india_time)
+    
+    # Section based on Central time
+    section_num, section_text = get_section(central_time.hour)
+    
+    print(f"Central: {central_str}, Eastern: {eastern_str}, Pacific: {pacific_str}, India: {india_str}")
     print(f"Section: {section_text}")
     print(f"Weather: {weather}")
     
@@ -145,26 +171,57 @@ def build_html():
       width: 800px;
       height: 480px;
       overflow: hidden;
-      padding: 12px;
+      padding: 10px;
     }}
 
     .header {{
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 2px solid #000;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }}
 
-    .date-time {{
-      font-size: 18px;
+    .date {{
+      font-size: 16px;
       font-weight: bold;
     }}
 
     .weather {{
-      font-size: 18px;
+      font-size: 14px;
       font-weight: bold;
+    }}
+
+    .timezone-row {{
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 0;
+      border-bottom: 2px solid #000;
+      margin-bottom: 6px;
+    }}
+
+    .tz {{
+      text-align: center;
+      font-size: 13px;
+    }}
+
+    .tz-label {{
+      font-weight: bold;
+      font-size: 11px;
+      opacity: 0.7;
+    }}
+
+    .tz-time {{
+      font-weight: bold;
+      font-size: 15px;
+    }}
+
+    .tz-primary {{
+      border: 2px solid #000;
+      padding: 2px 8px;
+      background: #000;
+      color: #fff;
     }}
 
     .progress-section {{
@@ -172,15 +229,15 @@ def build_html():
       align-items: center;
       justify-content: center;
       gap: 10px;
-      padding: 10px 0;
+      padding: 8px 0;
       border-bottom: 2px solid #000;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }}
 
     .section-label {{
-      font-size: 16px;
+      font-size: 14px;
       font-weight: bold;
-      min-width: 140px;
+      min-width: 130px;
     }}
 
     .progress-bar {{
@@ -189,8 +246,8 @@ def build_html():
     }}
 
     .progress-box {{
-      width: 28px;
-      height: 18px;
+      width: 26px;
+      height: 16px;
       border: 2px solid #000;
     }}
 
@@ -203,18 +260,18 @@ def build_html():
     }}
 
     .time-labels {{
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
     }}
 
     .columns {{
       display: flex;
-      height: 340px;
+      height: 300px;
     }}
 
     .column {{
       flex: 1;
-      padding: 0 10px;
+      padding: 0 8px;
       border-right: 2px solid #000;
     }}
 
@@ -223,24 +280,24 @@ def build_html():
     }}
 
     .column-header {{
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       text-align: center;
-      padding-bottom: 8px;
-      margin-bottom: 10px;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
       border-bottom: 1px solid #000;
     }}
 
     .task {{
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      padding: 6px 0;
-      font-size: 14px;
+      gap: 6px;
+      padding: 5px 0;
+      font-size: 13px;
     }}
 
     .checkbox {{
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
     }}
 
@@ -255,17 +312,36 @@ def build_html():
 
     .updated {{
       position: absolute;
-      bottom: 5px;
-      right: 10px;
-      font-size: 10px;
+      bottom: 3px;
+      right: 8px;
+      font-size: 9px;
       opacity: 0.5;
     }}
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="date-time">{datetime_str}</div>
+    <div class="date">{date_str}</div>
     <div class="weather">Ames: {weather}</div>
+  </div>
+
+  <div class="timezone-row">
+    <div class="tz">
+      <div class="tz-label">PACIFIC</div>
+      <div class="tz-time">{pacific_str}</div>
+    </div>
+    <div class="tz tz-primary">
+      <div class="tz-label">CENTRAL</div>
+      <div class="tz-time">{central_str}</div>
+    </div>
+    <div class="tz">
+      <div class="tz-label">EASTERN</div>
+      <div class="tz-time">{eastern_str}</div>
+    </div>
+    <div class="tz">
+      <div class="tz-label">INDIA</div>
+      <div class="tz-time">{india_str}</div>
+    </div>
   </div>
 
   <div class="progress-section">
@@ -298,7 +374,7 @@ def build_html():
     </div>
   </div>
 
-  <div class="updated">Updated: {datetime_str}</div>
+  <div class="updated">Updated: {central_str}</div>
 </body>
 </html>'''
 
