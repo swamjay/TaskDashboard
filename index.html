@@ -185,10 +185,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>wttr.in — Weather Report</title>
-
-    <link rel="stylesheet" type="text/css" 
+    <link rel="stylesheet" type="text/css"
           href="https://adobe-fonts.github.io/source-code-pro/source-code-pro.css">
-
     <style>
         html, body {
             margin: 0;
@@ -197,17 +195,16 @@
             height: 100%;
             overflow: auto;
         }
-
         .term-container {
             background: #000000;
             color: #bbbbbb;
-            font-family: "Source Code Pro", 
-                         "DejaVu Sans Mono", 
-                         Menlo, 
-                         "Lucida Sans Typewriter", 
-                         "Lucida Console", 
-                         monaco, 
-                         "Bitstream Vera Sans Mono", 
+            font-family: "Source Code Pro",
+                         "DejaVu Sans Mono",
+                         Menlo,
+                         "Lucida Sans Typewriter",
+                         "Lucida Console",
+                         monaco,
+                         "Bitstream Vera Sans Mono",
                          monospace;
             font-size: 11.8px;
             line-height: 1.30 !important;
@@ -220,15 +217,12 @@
             max-width: 100%;
             width: fit-content;
             display: block;
-
             box-sizing: border-box;
         }
-
         .term-fg1, .bold {
             color: #eeeeee;
             font-weight: normal;
         }
-
          
         .term-container-disabled {
   background: #171717;
@@ -531,14 +525,36 @@
 .term-fgx254 { color: #e4e4e4; }
 .term-fgx255 { color: #eeeeee; }
 
+
+         
+        .social-buttons {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 12px;
+            padding: 0 10px;
+            overflow-x: auto;            
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;       
+        }
+
+        .social-buttons::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .github-button,
+        .twitter-follow-button {
+            white-space: nowrap;         
+            flex-shrink: 0;              
+        }
     </style>
 </head>
 <body>
-    <div class="term-container">+34°F Partly cloudy
+    <div class="term-container">+39°F Overcast
     </div>
 
     
-
 </body>
 </html></div>
   </div>
@@ -546,28 +562,28 @@
   <div class="timezone-row">
     <div class="tz">
       <div class="tz-label">PACIFIC</div>
-      <div class="tz-time">4:42AM</div>
+      <div class="tz-time">5:54AM</div>
     </div>
     <div class="tz tz-primary">
       <div class="tz-label">CENTRAL</div>
-      <div class="tz-time">6:42AM</div>
+      <div class="tz-time">7:54AM</div>
     </div>
     <div class="tz">
       <div class="tz-label">EASTERN</div>
-      <div class="tz-time">7:42AM</div>
+      <div class="tz-time">8:54AM</div>
     </div>
     <div class="tz">
       <div class="tz-label">INDIA</div>
-      <div class="tz-time">6:12PM</div>
+      <div class="tz-time">7:24PM</div>
     </div>
   </div>
 
   <div class="progress-section">
     <span class="time-labels">6AM</span>
-    <span class="section-label">Section 1 of 12</span>
+    <span class="section-label">Section 2 of 12</span>
     <div class="progress-bar">
       <div class="progress-box filled"></div>
-<div class="progress-box empty"></div>
+<div class="progress-box filled"></div>
 <div class="progress-box empty"></div>
 <div class="progress-box empty"></div>
 <div class="progress-box empty"></div>
@@ -656,6 +672,6 @@
     </div>
   </div>
 
-  <div class="updated">Updated: 6:42AM</div>
+  <div class="updated">Updated: 7:54AM</div>
 </body>
 </html>
